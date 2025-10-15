@@ -1,3 +1,5 @@
+import os
+
 import folium
 import pandas as pd
 import requests
@@ -45,6 +47,11 @@ def display_property(payload, comparables, actual_price):
     st.dataframe(comparables['top_comparables'])
 
     avg_price_sqm = comparables['avg_sqm_price']
+    fluctuation = round(((comparables["valuation"] - actual_price) / actual_price) * 100, 2)
+    if fluctuation < 0:
+        absolute_fluctuation = fluctuation * -1
+    else:
+        absolute_fluctuation = fluctuation
     st.subheader("Valuation Summary")
     summary = pd.DataFrame([
         {
@@ -57,13 +64,13 @@ def display_property(payload, comparables, actual_price):
         },
         {
             "Metric": "Fluctuation (%)",
-            "Value": round(((comparables["valuation"] - actual_price) / actual_price) * 100, 2)
+            "Value": fluctuation
         },
         {
             "Metric": "Confidence",
             "Value": (
-                "High" if abs((actual_price / payload["sqm"]) - avg_price_sqm) < 500
-                else "Moderate" if abs((actual_price / payload["sqm"]) - avg_price_sqm) < 1500
+                "High" if absolute_fluctuation < 20
+                else "Moderate" if 20 < absolute_fluctuation < 30
                 else "Low"
             )
         },
@@ -75,7 +82,7 @@ def display_property(payload, comparables, actual_price):
 
 def get_instant_valuation(payload):
     try:
-        url = 'http://127.0.0.1:8000/comparables/instant-valuation/'
+        url = os.getenv('COMPARABLE_API_URL', 'http://127.0.0.1:8000/comparables/instant-valuation/')
         response = requests.post(
             url=url,
             json=payload
