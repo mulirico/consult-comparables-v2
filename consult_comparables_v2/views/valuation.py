@@ -1,10 +1,8 @@
-import os
-
 import folium
 import pandas as pd
-import requests
 import streamlit as st
 from streamlit_folium import st_folium
+from consult_comparables_v2.service import get_instant_valuation
 
 
 def display_property(payload, comparables, actual_price):
@@ -78,20 +76,6 @@ def display_property(payload, comparables, actual_price):
     st.table(summary)
     st.divider()
     st.json(comparables)
-
-
-def get_instant_valuation(payload):
-    try:
-        url = os.getenv('COMPARABLE_API_URL', 'http://127.0.0.1:8000/comparables/instant-valuation/')
-        response = requests.post(
-            url=url,
-            json=payload
-        )
-        return response
-    except BaseException as e:
-        st.write(f'Error requesting comparables API: \n'
-                      f'{e.args}')
-        return None
 
 st.title('Request instant valuation API v2')
 st.divider()
